@@ -36,7 +36,7 @@ class Miner(Agent):
             self.iron_ore += 10
             print(f"Miner mined 10 iron ores. Total: {self.iron_ore}")
             parcel = Parcel(10, "Smelter", "mined", "Iron", "Ore")
-            await log(self, "mined", parcel.quantity, parcel.material_type, parcel.item)
+            log(self, parcel.message, parcel.quantity, parcel.material_type, parcel.item)
             # await self.send_parcel("Miner", "Iron", "Iron Ore")
 
             try:
@@ -49,16 +49,7 @@ class Miner(Agent):
             finally:
                 await asyncio.sleep(5)
 
-    # async def send_parcel(self, receiver, material_type, item, quantity=10):
-    #     # TODO: jsonify instead of harcoding
-    #     # TODO: Add this function for all Classes
-    #     parcel = Parcel(quantity, receiver, "Iron Ore parcel", material_type, item)
-    #     if parcel.validate("Miner", receiver.__class__.__name__):
-    #         await self.send_message(parcel, smelter.addr)
-    #         print(f"Miner sent parcel: {parcel}")
-    #         self.iron_ore -= quantity
-    #     else:
-    #         print(f"Parcel validation failed for Miner to {receiver.__class__.__name__}.")
+
 
     def on_ready(self):
         asyncio.create_task(self.mining())
@@ -70,22 +61,24 @@ class Smelter(Agent):
         self.iron_ore = 0
         self.copper_ore = 0
 
-    async def handle_message(self, content, meta):
+    def handle_message(self, content, meta):
         if isinstance(content, Parcel):
-            await log(self, "received", content.quantity, content.material_type, content.item)
+            log(self, "received", content.quantity, content.material_type, content.item)
             self.iron_ore += content.quantity
             # print(f"Smelter received {content.quantity} iron ore. Total: {self.iron_ore}")
             if self.iron_ore >= 10:
-                await asyncio.create_task(self.smelting())
+
+                asyncio.create_task(self.smelting())
 
     async def smelting(self):
         if self.iron_ore >= 20:
             print(f"Smelter is smelting 20 iron ores into 5 iron ingots...")
             await asyncio.sleep(5)
             self.iron_ore -= 20
-            parcel = Parcel(5, "Factory", "sent", "Iron", "Ingots")
+            parcel = Parcel(5, "Factory", "smelted", "Iron", "Ingots")
             try:
                 if parcel.validate("Smelter", parcel.receiver):
+                    log(self, parcel.message, parcel.quantity, parcel.material_type, parcel.item)
                     await self.send_message(parcel, factory.addr)
                     print(f"Smelter sent parcel: {parcel}")
             except ValueError as e:
@@ -104,10 +97,10 @@ class Factory(Agent):
         self.iron_ingots = 0
         self.copper_ingots = 0
 
-    async def handle_message(self, content, meta):
+    def handle_message(self, content, meta):
         if isinstance(content, Parcel):
             self.iron_ingots += content.quantity
-            await log(self, "received", content.quantity, content.material_type, content.item, "Storage")
+            log(self, "received", content.quantity, content.material_type, content.item)
             # print(f"Factory received {content.quantity} iron ingots. Total: {self.iron_ingots}")
             if self.iron_ingots >= 10:
                 asyncio.create_task(self.craft_pipes())
@@ -117,15 +110,11 @@ class Factory(Agent):
         await asyncio.sleep(5)
         self.iron_ingots -= 10
         quantity = 5
-        parcel = Parcel(quantity, storage, "Iron Pipes parcel", "Iron", "Pipes")
-        try:
-            if parcel.validate("Factory", parcel.receiver):
-                await self.send_message(parcel, storage.addr)
-                print(f"Factory sent parcel: {parcel}")
-        except ValueError as e:
-            print(f"Parcel validation failed: {e}")
-        finally:
-            await asyncio.sleep(5)
+        parcel = Parcel(quantity, storage, "crafted", "Iron", "Pipes")
+        log(self, parcel.message, parcel.quantity, parcel.material_type, parcel.item)
+        await self.send_message(parcel, storage.addr)
+        print(f"Factory sent parcel: {parcel}")
+        await asyncio.sleep(5)
 
 
 
@@ -136,12 +125,12 @@ class Storage(Agent):
         self.iron_pipes = 0
         self.stop_event = asyncio.Event()
 
-    async def handle_message(self, content, meta):
+    def handle_message(self, content, meta):
         if isinstance(content, Parcel):
+            log(self, "received", content.quantity, content.material_type, content.item)
             self.iron_pipes += content.quantity
-            await log(self, "received", content.quantity, content.material_type, content.item)
             if self.iron_pipes >= TARGET_PIPES:
-                await log(self, "stored", TARGET_PIPES, content.material_type, content.item)
+                log(self, "finished", 0, "-", "-")
                 self.stop_event.set()  # Set event to indicate completion
 
 

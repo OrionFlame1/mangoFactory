@@ -2,42 +2,38 @@ import json
 import datetime
 import websocket
 import asyncio
+from time import sleep
 
 def tojson(dict):
     return json.dumps(dict, indent=2)
-
-async def log(obj, action, qty, mat, item, *to):
-    DEBUG = True
+# ob = "Storage" action = "Finished"
+def log(obj, action, qty, mat, item, *to):
     message = " "
     time = datetime.datetime.now().replace(microsecond=0)
-    receiver = obj.__class__.__name__
-    message = message.join([f"[{time}] -", receiver, action, str(qty), mat, item])
-    payload = tojson({
-            "message" : message,
-            "obj" : receiver if receiver else obj,
-            "action" : action,
-            "qty" : qty,
-            "mat" : mat,
-            "item" : item
-        })
-    if not DEBUG:
-        print(tojson({"message" : message}))
-        await send_websocket_update(tojson({"message" : message}))
+    if obj.__class__.__name__ == "Storage" and action == "finished": # FINISHED PRODUCTION
+        payload = {
+            "message" : f"[{time}] - Finished production",
+            "finished" : "true"
+        }
+        asyncio.create_task(send_websocket_update(payload))
+        sleep(0.5)
+        obj.stop_event.set()  # Set event to indicate completion
     else:
-        print(payload)
-        await send_websocket_update(payload)
+        receiver = obj.__class__.__name__
+        message = message.join([f"[{time}] -", receiver, action, str(qty), mat, item])
+        payload = {
+                "message" : message,
+                "obj" : receiver if receiver else obj,
+                "action" : action,
+                "qty" : qty,
+                "mat" : mat,
+                "item" : item
+            }
+        asyncio.create_task(send_websocket_update(payload))
 
 async def send_websocket_update(message):
-    print("function entered")
-    await websocket.data_send(message)
+
+    await websocket.data_send(tojson(message))
     # async with websockets.connect(WEBSOCKET_SERVER) as websocket:
     #     await websocket.serve(message)
     #     print(message)
-
-# log(self, "received", self.iron_ore)
-
-if __name__ == "__main__":
-    dict = {}
-    dict.add({"iron_ore": 0})
-    dict.add({"copper_ore": 0})
-    print(tojson(dict))
