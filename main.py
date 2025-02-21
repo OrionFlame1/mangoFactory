@@ -1,6 +1,6 @@
 import asyncio
 from mango import Agent, create_tcp_container, activate
-from helper import tojson, log
+from helper import log
 
 TARGET_PIPES = 10  # Target number of iron pipes to store
 
@@ -36,7 +36,6 @@ class Miner(Agent):
             print(f"Miner mined 10 iron ores. Total: {self.iron_ore}")
             parcel = Parcel(10, "Smelter", "mined", "Iron", "Ore")
             log(self, parcel.message, parcel.quantity, parcel.material_type, parcel.item)
-            # await self.send_parcel("Miner", "Iron", "Iron Ore")
 
             try:
                 if parcel.validate("Miner", parcel.receiver):
@@ -47,8 +46,6 @@ class Miner(Agent):
                 print(f"Parcel validation failed: {e}")
             finally:
                 await asyncio.sleep(5)
-
-
 
     def on_ready(self):
         asyncio.create_task(self.mining())
@@ -64,7 +61,6 @@ class Smelter(Agent):
         if isinstance(content, Parcel):
             log(self, "received", content.quantity, content.material_type, content.item)
             self.iron_ore += content.quantity
-            # print(f"Smelter received {content.quantity} iron ore. Total: {self.iron_ore}")
             if self.iron_ore >= 10:
 
                 asyncio.create_task(self.smelting())
@@ -100,7 +96,6 @@ class Factory(Agent):
         if isinstance(content, Parcel):
             self.iron_ingots += content.quantity
             log(self, "received", content.quantity, content.material_type, content.item)
-            # print(f"Factory received {content.quantity} iron ingots. Total: {self.iron_ingots}")
             if self.iron_ingots >= 10:
                 asyncio.create_task(self.craft_pipes())
 
@@ -143,6 +138,5 @@ async def main():
 
     async with activate(container):
         await storage.stop_event.wait()
-
 
 asyncio.run(main())
