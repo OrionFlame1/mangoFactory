@@ -1,9 +1,9 @@
-# Industrial Agent Simulation 🏭
+# Mango Factory 🏭
 
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)](https://www.python.org/downloads/)
 [![Simulation](https://img.shields.io/badge/type-Agent%20Simulation-green)](https://en.wikipedia.org/wiki/Agent-based_model)
 
-An asynchronous agent-based simulation of an industrial supply chain with Miner, Smelter, Factory, and Storage agents.
+An asynchronous agent-based simulation of an industrial supply chain with Miner, Smelter, Factory, and Storage agents, used as an example for a college project.
 
 ## Features ✨
 - Agent-based modeling with `mango` framework
