@@ -83,14 +83,6 @@ Storage reached target of 10 iron pipes!
 3. Factory → Storage: Allowed (Product transfer)
 4. Reverse flows: Prohibited by validation
 
-# Future Enhancements
-- Add copper production chain
-- Implement resource constraints
-- Add real-time visualization
-- Introduce random failures/events
-- Expand validation rules
-- Add unit tests
-
 # Roadmap
 - [ ] Add copper production chain
 - [ ] Implement resource constraints
